@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 
 const BOT = process.env.BOT_INTERNAL_URL;
 
-export async function GET(req: Request, ctx: { params: { path: string[] } }) {
-  if (!BOT) return NextResponse.json({ error: "BOT_INTERNAL_URL missing" }, { status: 500 });
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ path: string[] }> }
+) {
+  if (!BOT) {
+    return NextResponse.json({ error: "BOT_INTERNAL_URL missing" }, { status: 500 });
+  }
 
-  const path = (ctx.params.path || []).join("/");
+  const { path = [] } = await params;
+
   const url = new URL(req.url);
-  const target = `${BOT.replace(/\/$/, "")}/${path}${url.search}`;
+  const target = `${BOT.replace(/\/$/, "")}/${path.join("/")}${url.search}`;
 
   const r = await fetch(target, { cache: "no-store" });
   const text = await r.text();
